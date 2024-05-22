@@ -3,6 +3,8 @@ import { SongList } from "./components/SongList";
 import spotify from "./lib/spotify";
 import { Player } from "./components/Player";
 import { SearchInput } from "./components/SearchInput";
+import { Pagination } from "./components/Pagination";
+const limit = 20
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(false)
@@ -11,6 +13,9 @@ export default function App() {
   const [selectedSong, setSelectedSong] = useState()
   const [keyword, setKeyword] = useState('')
   const [searchedSongs, setSearchedSongs] = useState()
+  const [page, setPage] = useState(1)
+  const [hasPrev, setHasPrev] = useState(false)
+  const [hasNext, setHasNext] = useState(false)
   const audioRef = useRef(null)
 
   useEffect(() => {
@@ -59,11 +64,26 @@ export default function App() {
     setKeyword(e.target.value)
   }
 
-  const searchSongs = async () => {
+  const searchSongs = async (page) => {
     setIsLoading(true)
-    const res = await spotify.searchSongs(keyword)
+    const offset = parseInt(page) ? (parseInt(page) - 1) * limit : 0
+    const res = await spotify.searchSongs(keyword, limit, offset)
+    setHasPrev(res.previous != null)
+    setHasNext(res.next != null)
     setSearchedSongs(res.items)
     setIsLoading(false)
+  }
+
+  const moveToNextPage = async () => {
+    const nextPage = page + 1
+    await searchSongs(nextPage)
+    setPage(nextPage)
+  }
+
+  const moveToPrevPage = async () => {
+    const prevPage = page - 1
+    await searchSongs(prevPage)
+    setPage(prevPage)
   }
 
   return (
@@ -72,13 +92,35 @@ export default function App() {
         <header className="flex justify-between items-center mb-10">
           <h1 className="text-4xl font-bold">Music App</h1>
         </header>
-        <SearchInput onInputChange={handleInputChange} onSubmit={searchSongs} />
+        <SearchInput
+          onInputChange={handleInputChange}
+          onSubmit={searchSongs}
+        />
         <section>
-          <h2 className="text-2xl font-semibold mb-5">Popular Songs</h2>
-          <SongList isLoading={isLoading} songs={searchedSongs != null ? searchedSongs : popularSongs} onSongSelected={handleSongSelected} />
+          <h2 className="text-2xl font-semibold mb-5">
+            {searchedSongs ? 'Searched Results' : 'Popular Songs'}
+          </h2>
+          <SongList
+            isLoading={isLoading}
+            songs={searchedSongs ? searchedSongs : popularSongs}
+            onSongSelected={handleSongSelected}
+          />
+          {searchedSongs && (
+            <Pagination
+              onPrev={hasPrev ? moveToPrevPage : null}
+              onNext={hasNext ? moveToNextPage : null}
+              page={page}
+            />
+          )}
         </section>
       </main>
-      {selectedSong != null && <Player song={selectedSong} isPlay={isPlay} onButtonClick={toggleSong} />}
+      {selectedSong && (
+        <Player
+          song={selectedSong}
+          isPlay={isPlay}
+          onButtonClick={toggleSong}
+        />
+      )}
       <audio ref={audioRef} />
     </div>
   );
