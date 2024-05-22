@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { SongList } from "./components/SongList";
 import spotify from "./lib/spotify";
 import { Player } from "./components/Player";
+import { SearchInput } from "./components/SearchInput";
 
 export default function App() {
-  const [isLoading, setLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [popularSongs, setPopularSongs] = useState([])
   const [isPlay, setIsPlay] = useState(false)
   const [selectedSong, setSelectedSong] = useState()
+  const [keyword, setKeyword] = useState('')
+  const [searchedSongs, setSearchedSongs] = useState()
   const audioRef = useRef(null)
 
   useEffect(() => {
@@ -15,13 +18,13 @@ export default function App() {
   }, [])
 
   const fetchPopularSongs = async () => {
-    setLoading(true)
+    setIsLoading(true)
     const res = await spotify.getPopularSongs()
     const popularSongs = res.items.map((item) => {
       return item.track
     })
     setPopularSongs(popularSongs)
-    setLoading(false)
+    setIsLoading(false)
   }
 
   const handleSongSelected = async (song) => {
@@ -52,15 +55,27 @@ export default function App() {
     }
   }
 
+  const handleInputChange = (e) => {
+    setKeyword(e.target.value)
+  }
+
+  const searchSongs = async () => {
+    setIsLoading(true)
+    const res = await spotify.searchSongs(keyword)
+    setSearchedSongs(res.items)
+    setIsLoading(false)
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white">
       <main className="flex-1 p-8 mb-20">
         <header className="flex justify-between items-center mb-10">
           <h1 className="text-4xl font-bold">Music App</h1>
         </header>
+        <SearchInput onInputChange={handleInputChange} onSubmit={searchSongs} />
         <section>
           <h2 className="text-2xl font-semibold mb-5">Popular Songs</h2>
-          <SongList isLoading={isLoading} songs={popularSongs} onSongSelected={handleSongSelected} />
+          <SongList isLoading={isLoading} songs={searchedSongs != null ? searchedSongs : popularSongs} onSongSelected={handleSongSelected} />
         </section>
       </main>
       {selectedSong != null && <Player song={selectedSong} isPlay={isPlay} onButtonClick={toggleSong} />}
