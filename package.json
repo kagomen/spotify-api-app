@@ -17,7 +17,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy:wrangler": "wrangler pages deploy build --project-name spotify-api-app",
+    "deploy:wrangler": "npx wrangler pages deploy build --project-name spotify-api-app",
     "deploy": "run-s build deploy:wrangler"
   },
   "eslintConfig": {
