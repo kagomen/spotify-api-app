@@ -159,3 +159,50 @@
 - React の設計
   - 親コンポーネントで状態の宣言・管理をするっぽい
   - 子は状態を渡されて、画面に反映させるだけっぽい
+
+## Cloudflare へのデプロイ
+
+- Wrangler をインストール
+
+  ```
+  npm i -D wrangler
+  ```
+
+- ログイン
+
+  ```
+  npx wrangler login
+  ```
+
+- プロジェクト作成
+
+  ```
+  npx wrangler pages project create
+  ```
+
+- プロジェクト作成
+
+  ```
+  npx wrangler pages deploy build --project-name <プロジェクト名>
+  ```
+
+- `run-s`コマンドを使えるようにする
+
+  ```
+  npm i -D npm-run-all
+  ```
+
+- package.json を変更して、`npm run deploy`でデプロイできるように設定する
+
+```json
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy:wrangler": "wrangler pages deploy build --project-name spotify-api-app",
+    "deploy": "run-s build deploy:wrangler"
+  },
+```
+
+参考: https://firstlayout.net/upload-directly-to-cloudflare-pages-using-wrangler/
